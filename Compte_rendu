@@ -1,0 +1,36 @@
+TP1 /////////////////
+
+1.2 /////////////////
+
+a)
+final_state4([[1,2,3,4],
+			  [5,6,7,8],
+			  [9,10,11,12],
+			  [13,14,15,vide]]).
+
+b)
+requete 1 : permet de connaitre le numéros de ligne et de colonne de la tuile d dans l'état inital
+requete 2 : permet de connaitre la tuile de la ligne 3 et de la colonne 2 dans l'état final
+
+c)
+final_state(Fin), nth1(L,Fin,Ligne) , nth1(C,Ligne,a) , initial_state(Ini) , nth1(L,Ini,LigneIni) , nth1(C,LigneIni,a)
+
+d)
+initial_state(Ini), rule(X,1,Ini,S2)
+
+e)
+initial_state(Ini), findall(X,rule(X,1,Ini,S2),Result).
+
+f)
+initial_state(Ini), findall([X,S2]   ,  rule(X,1,Ini,S2),   Result).
+
+2 ////////////////////
+
+2.1)Codage du nombre de différences entre 2 matrices via la méthode a.
+
+2.2)Calcul de la distance de Manhattan
+
+
+3 /////////////////////
+
+
