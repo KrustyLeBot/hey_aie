@@ -120,7 +120,6 @@ successeur([S,[_,_,G],_,_], Suc_elem, Q):-
 %cerveau macron (cas vide)
 loop_successeur([],_,Pf,Pu,PfNew,PuNew).
 	
-
 %Cas S dans P
 loop_successeur(Liste,S,Pf,Pu,PfNew,PuNew):-
 
