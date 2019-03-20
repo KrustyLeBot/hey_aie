@@ -56,21 +56,23 @@ main :-
 	empty(Q),
 	insert([[H,H,0],Ini],Pf,PfNew),
 	insert([Ini,[H,H,0],nil,nil],Pu,PuNew),
+	writeln("debut aetoile"),
 	aetoile(PfNew,PuNew,Q).
 
 
 %*******************************************************************************
 %Kassos (Cas sans solution)
 aetoile(Pf, _, _) :-
-	Pf = nil, !,		%Wololo on sai pas si ça marche
+	Pf = nil, !,		%Wololo on sait pas si ça marche
 	write("Pas de solution").
 	
 %EPHAD (Situation terminale)
 aetoile(Pf,Pu,Q) :-
+	writeln("debut aetoile situation terminale"),
 	suppress_min(MinTerm, Pf, _),		%Suppression du terme dans Pf
 	MinTerm = [[F,H,G],S],
 	suppress([S,[F,H,G],Papa,Action], Pu, _),	%Suppression du terme dans Pu
-	fnal_state(Fin),
+	final_state(Fin),!,
 	S = Fin, !,								%On verifie qu'on est bien à l'état final
 	insert([S,[F,H,G],Papa,Action],Q,QNew),
 	writeln("Solution trouvée : "),
@@ -79,12 +81,14 @@ aetoile(Pf,Pu,Q) :-
 
 %De Gaulle (Cas général)
 aetoile(Pf,Pu,Q) :-
+	writeln("debut aetoile cas general"),
 	suppress_min(MinTerm, Pf, PfNew),
 	MinTerm = [[F,H,G],S],
 	Terme = [S,[F,H,G],_,_],
 	suppress(Terme, Pu, PuNew),
+	writeln("debut liste successeur"),
 	liste_successeur(Terme,Liste,Q),
-	loop_successeur(Liste,S,PfNew,PuNew,PfNewNew,PuNewNew),
+	loop_successeur(Liste,S,PfNew,PuNew,PfNewNew,PuNewNew,Q),
 	insert(Terme,Q,QNew),
 	aetoile(PfNewNew,PuNewNew,QNew).
 
@@ -106,22 +110,72 @@ write_solution(S,Q):-
 
 
 liste_successeur(Pu_elem,Liste,Q):-
-	findall(Suc_elem,successeur(Pu_elem,Suc_elem,Q), Liste).
+	findall(Suc_elem,successeur(Pu_elem,Suc_elem,Q), Liste). %Lister tous les successeurs d'un etat donné par AVL Pu
+
 
 successeur([S,[_,_,G],_,_], Suc_elem, Q):-
-	rule(Action, Cout, S, Suc),
-	not(belongs([Suc|_], Q)),
-	heuristique(Suc, H_suc),
-	G_suc is G+Cout,
-	F_suc is H_suc+G_suc,
-	Suc_elem = [Suc,[F_suc,H_suc,G_suc],S,Action].
+	rule(Action, Cout, S, Suc),	%récupération successeurs
+	not(belongs(Suc, Q)),	%Verif pas explorés
+	heuristique(Suc, H_suc),	%Calcul de leur heuristique
+	G_suc = G+Cout,			%Ajout du cout
+	F_suc = H_suc+G_suc,		%Ajout du cout estimé final
+	Suc_elem = [Suc,[F_suc,H_suc,G_suc],S,Action].	%Nouvel AVL Pu
 
 	
 %cerveau macron (cas vide)
-loop_successeur([],_,Pf,Pu,PfNew,PuNew).
-	
-%Cas S dans P
-loop_successeur(Liste,S,Pf,Pu,PfNew,PuNew):-
+loop_successeur([],_,Pf,Pu,Pf,Pu,_).
 
-%Cas S pas dans P
-loop_successeur(Liste,S,Pf,Pu,PfNew,PuNew):-
+%Cas proctologue : S est dans cul (deja exploré)
+loop_successeur([[S,[F_suc,H_suc,G_suc],Papa,Action]|Reste],S,Pf,Pu,PfNew,PuNew,Q):-
+	
+	writeln("Voici Pu"),
+	put_flat(Pu),
+
+	belongs([S,[F_suc,H_suc,G_suc],Papa,Action],Q), !,
+	loop_successeur(Reste,S,Pf,Pu,PfNew,PuNew,Q).
+	
+%Cas S dans Pu => S pas encore developé
+loop_successeur([[S,[F_suc,H_suc,G_suc],Papa,Action]|Reste],S,Pf,Pu,PfNew,PuNew,Q):-
+	belongs([S,[F,H,G],_,_],Pu), !,   %check S dans Pu
+	(F_suc<F ->                     %si new cout inf a l'ancien
+		%on garde le nouveau
+		supress([S,[_,_,_],_,_], Pu, PuTmp),
+		supress([[F,H,G],S], Pf, PfTmp),
+
+		insert([S,[F_suc,H_suc,G_suc],Papa,Action], PuTmp, PuTmp2),
+		insert([[F_suc,H_suc,G_suc],S], PfTmp, PfTmp2),
+		
+		loop_successeur(Reste,S,PfTmp2,PuTmp2,PfNew,PuNew,Q)
+	;
+		%sinon on loop sur le reste avec pf et pu
+		loop_successeur(Reste,S,Pf,Pu,PfNew,PuNew,Q)
+	).
+	
+		
+	
+
+%Cas S pas dans Pu
+loop_successeur([[S,[F_suc,H_suc,G_suc],Papa,Action]|Reste],S,Pf,Pu,PfNew,PuNew,Q):-
+	%not(belongs([S,[F,H,G],_,_],Pu),		%On vérfie que S n'est pas dans Pu
+	insert([S,[F_suc,H_suc,G_suc],Papa,Action], Pu,PuTmp),	%On rajoute S dans Pu
+	insert([[F_suc,H_suc,G_suc],S], Pf, PfTmp),				%On rajoute S dans Pf
+	loop_successeur(Reste,S,PfTmp,PuTmp,PfNew,PuNew,Q).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
