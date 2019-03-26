@@ -108,7 +108,6 @@ write_solution(S,Q):-
 	initial_state(Ini),
 	(S=Ini ->
 		writeln('-------------------------------------'),
-		writeln(F)
 	;
 		write_solution(Papa,QNew)
 	).
