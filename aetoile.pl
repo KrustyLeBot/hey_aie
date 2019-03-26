@@ -64,7 +64,7 @@ main :-
 %Kassos (Cas sans solution)
 aetoile(Pf, _, _) :-
 	Pf = nil, !,		%Wololo on sait pas si ça marche
-	write("Pas de solution").
+	writeln("Pas de solution").
 	
 %EPHAD (Situation terminale)
 aetoile(Pf,Pu,Q) :-
@@ -72,8 +72,10 @@ aetoile(Pf,Pu,Q) :-
 	suppress_min(MinTerm, Pf, _),		%Suppression du terme dans Pf
 	MinTerm = [[F,H,G],S],
 	suppress([S,[F,H,G],Papa,Action], Pu, _),	%Suppression du terme dans Pu
-	final_state(Fin),!,
-	S = Fin, !,								%On verifie qu'on est bien à l'état final
+	final_state(Fin),
+	writeln(S),
+	writeln(Fin),
+	S = Fin, !,					%On verifie qu'on est bien à l'état final
 	insert([S,[F,H,G],Papa,Action],Q,QNew),
 	writeln("Solution trouvée : "),
 	write_solution(S,QNew).
@@ -86,7 +88,6 @@ aetoile(Pf,Pu,Q) :-
 	MinTerm = [[F,H,G],S],
 	Terme = [S,[F,H,G],_,_],
 	suppress(Terme, Pu, PuNew),
-	writeln("debut liste successeur"),
 	liste_successeur(Terme,Liste,Q),
 	loop_successeur(Liste,S,PfNew,PuNew,PfNewNew,PuNewNew,Q),
 	insert(Terme,Q,QNew),
@@ -101,12 +102,16 @@ afficher_taquin([X|Y]):-
 %affichage d'une solution finale ou d'une solution intermediaire
 write_solution(S,Q):-
 	suppress([S, F, Papa, Action], Q, QNew),
-	write_solution(Papa,QNew),
 	writeln('-------------------------------------'),
 	writeln(Action),
-	writeln('-------------------------------------'),
 	afficher_taquin(S),
-	writeln(F).
+	initial_state(Ini),
+	(S=Ini ->
+		writeln('-------------------------------------'),
+		writeln(F)
+	;
+		write_solution(Papa,QNew)
+	).
 
 
 liste_successeur(Pu_elem,Liste,Q):-
@@ -117,25 +122,25 @@ successeur([S,[_,_,G],_,_], Suc_elem, Q):-
 	rule(Action, Cout, S, Suc),	%récupération successeurs
 	not(belongs(Suc, Q)),	%Verif pas explorés
 	heuristique(Suc, H_suc),	%Calcul de leur heuristique
-	G_suc = G+Cout,			%Ajout du cout
-	F_suc = H_suc+G_suc,		%Ajout du cout estimé final
+	G_suc is G+Cout,			%Ajout du cout
+	F_suc is H_suc+G_suc,		%Ajout du cout estimé final
 	Suc_elem = [Suc,[F_suc,H_suc,G_suc],S,Action].	%Nouvel AVL Pu
 
-	
+
 %cerveau macron (cas vide)
 loop_successeur([],_,Pf,Pu,Pf,Pu,_).
 
 %Cas proctologue : S est dans cul (deja exploré)
-loop_successeur([[S,[F_suc,H_suc,G_suc],Papa,Action]|Reste],S,Pf,Pu,PfNew,PuNew,Q):-
-	
-	writeln("Voici Pu"),
+loop_successeur([X|Reste],U,Pf,Pu,PfNew,PuNew,Q):-
+	X = [S,[F_suc,H_suc,G_suc],Papa,Action],
 	put_flat(Pu),
 
 	belongs([S,[F_suc,H_suc,G_suc],Papa,Action],Q), !,
-	loop_successeur(Reste,S,Pf,Pu,PfNew,PuNew,Q).
+	loop_successeur(Reste,U,Pf,Pu,PfNew,PuNew,Q).
 	
 %Cas S dans Pu => S pas encore developé
-loop_successeur([[S,[F_suc,H_suc,G_suc],Papa,Action]|Reste],S,Pf,Pu,PfNew,PuNew,Q):-
+loop_successeur([X|Reste],U,Pf,Pu,PfNew,PuNew,Q):-
+	X = [S,[F_suc,H_suc,G_suc],Papa,Action],
 	belongs([S,[F,H,G],_,_],Pu), !,   %check S dans Pu
 	(F_suc<F ->                     %si new cout inf a l'ancien
 		%on garde le nouveau
@@ -145,21 +150,19 @@ loop_successeur([[S,[F_suc,H_suc,G_suc],Papa,Action]|Reste],S,Pf,Pu,PfNew,PuNew,
 		insert([S,[F_suc,H_suc,G_suc],Papa,Action], PuTmp, PuTmp2),
 		insert([[F_suc,H_suc,G_suc],S], PfTmp, PfTmp2),
 		
-		loop_successeur(Reste,S,PfTmp2,PuTmp2,PfNew,PuNew,Q)
+		loop_successeur(Reste,U,PfTmp2,PuTmp2,PfNew,PuNew,Q)
 	;
 		%sinon on loop sur le reste avec pf et pu
-		loop_successeur(Reste,S,Pf,Pu,PfNew,PuNew,Q)
-	).
-	
-		
+		loop_successeur(Reste,U,Pf,Pu,PfNew,PuNew,Q)
+	).	
 	
 
 %Cas S pas dans Pu
-loop_successeur([[S,[F_suc,H_suc,G_suc],Papa,Action]|Reste],S,Pf,Pu,PfNew,PuNew,Q):-
+loop_successeur([[S,[F_suc,H_suc,G_suc],Papa,Action]|Reste],U,Pf,Pu,PfNew,PuNew,Q):-
 	%not(belongs([S,[F,H,G],_,_],Pu),		%On vérfie que S n'est pas dans Pu
 	insert([S,[F_suc,H_suc,G_suc],Papa,Action], Pu,PuTmp),	%On rajoute S dans Pu
 	insert([[F_suc,H_suc,G_suc],S], Pf, PfTmp),				%On rajoute S dans Pf
-	loop_successeur(Reste,S,PfTmp,PuTmp,PfNew,PuNew,Q).
+	loop_successeur(Reste,U,PfTmp,PuTmp,PfNew,PuNew,Q).
 
 
 
