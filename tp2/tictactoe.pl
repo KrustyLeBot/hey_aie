@@ -50,7 +50,22 @@ adversaire(o,x).
 	 continuer � jouer (quel qu'il soit).
 	 ****************************************************/
 
-% situation_terminale(_Joueur, Situation) :-   ? ? ? ? ?
+%le board est remplit
+situation_terminale(_Joueur, Situation) :- ground(Situation).
+
+%joueur a un alignement gagnant
+situation_terminale(Joueur, Situation) :-
+	alignement(Ali, Situation),
+	alignement_gagnant(Ali,Joueur),!.
+
+%L'adversaire de joueur a un alignement gagnant
+situation_terminale(Joueur, Situation) :-
+	adversaire(Adv, Joueur),
+	alignement(Ali, Situation),
+	alignement_gagnant(Ali,Adv),!.
+
+					   
+
 
 /***************************
  DEFINITIONS D'UN ALIGNEMENT
@@ -129,7 +144,7 @@ seconde_diag(K,D,M) :-
 	 **********************************/
 
 possible([X|L], J) :- unifiable(X,J), possible(L,J).
-possible([   ], _).
+possible([], _).
 
 	/* Attention 
 	il faut juste verifier le caractere unifiable
@@ -137,8 +152,11 @@ possible([   ], _).
 	faut pas realiser l'unification.
 	*/
 
-% A FAIRE 
-% unifiable(X,J) :- ? ? ? ? ?
+%check si X est vide
+unifiable(X,_) :- var(X).
+%check si X est pas vide puis si X=J 
+unifiable(X,J) :- ground(X),
+		  x==J.
 	
 	/**********************************
 	 DEFINITION D'UN ALIGNEMENT GAGNANT
@@ -152,23 +170,29 @@ Un alignement perdant pour J est gagnant
 pour son adversaire.
 	*/
 
-% A FAIRE
 
-% alignement_gagnant(Ali, J) :- ? ? ? ?
+alignement_gagnant(Ali, J) :- ground(Ali), possible(Ali, J).
 
-% alignement_perdant(Ali, J) :- ? ? ? ?
+alignement_perdant(Ali, J) :- adversaire(J, Adv), alignement_gagnant(Ali, Adv).
 
+alignement_possible(J,Ali_poss,Etat) :-
+	alignement(Ali_poss,Etat),
+	possible(Ali_poss,J).
 
 	/******************************
 	DEFINITION D'UN ETAT SUCCESSEUR
 	*******************************/
 
-     /*Il faut definir quelle op�ration subitune matrice M representant la situation courante
+     /*Il faut definir quelle op�ration subit une matrice M representant la situation courante
 	lorsqu'un joueur J joue en coordonnees [L,C]
      */	
 
-% A FAIRE
-% successeur(J,Etat,[L,C]) :- ? ? ? ?  
+%renvoit tous les coups possibles de jouer avec l'etat successeur
+successeur(J,Etat,[L,C]) :-
+	nth1(L,Etat,Ligne),
+	nth1(C,Ligne,Elem),
+	var(Elem), %check si l'element est pas deja unifié
+	Elem = J.
 
 	/**************************************
    	 EVALUATION HEURISTIQUE D'UNE SITUATION
@@ -198,8 +222,16 @@ heuristique(J,Situation,H) :-		% cas 2
 % on ne vient ici que si les cut precedents n'ont pas fonctionne,
 % c-a-d si Situation n'est ni perdante ni gagnante.
 
-% A FAIRE 					cas 3
-% heuristique(J,Situation,H) :- ? ? ? ?
+heuristique(J,Situation,H) :-
+	
+	findall(Ali_J, alignement_possible(J,Ali_J,Situation), Liste_ali),
+	length(Liste_ali, PossJ),
+
+	adversaire(J,Adv),
+	findall(Ali_Adv, alignement_possible(Adv,Ali_Adv,Situation), Liste_ali),
+	length(Liste_ali, PossAdv),
+
+	H is PossJ - PossAdv.
 
 
 
