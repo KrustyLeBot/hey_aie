@@ -224,12 +224,12 @@ heuristique(J,Situation,H) :-		% cas 2
 
 heuristique(J,Situation,H) :-
 	
-	findall(Ali_J, alignement_possible(J,Ali_J,Situation), Liste_ali),
-	length(Liste_ali, PossJ),
+	findall(Ali_J, alignement_possible(J,Ali_J,Situation), Liste_ali_J),
+	length(Liste_ali_J, PossJ),
 
 	adversaire(J,Adv),
-	findall(Ali_Adv, alignement_possible(Adv,Ali_Adv,Situation), Liste_ali),
-	length(Liste_ali, PossAdv),
+	findall(Ali_Adv, alignement_possible(Adv,Ali_Adv,Situation), Liste_ali_Adv),
+	length(Liste_ali_Adv, PossAdv),
 
 	H is PossJ - PossAdv.
 
