@@ -156,7 +156,7 @@ possible([], _).
 unifiable(X,_) :- var(X).
 %check si X est pas vide puis si X=J 
 unifiable(X,J) :- ground(X),
-		  x==J.
+		  X==J.
 	
 	/**********************************
 	 DEFINITION D'UN ALIGNEMENT GAGNANT
